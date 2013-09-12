@@ -1,0 +1,42 @@
+<?php
+
+require_once 'function_image_crop.php';
+
+function image_crop_enable ()
+{
+	variable_set('image_crop_ratio', 1.5);
+	
+	deleteImageStyle();
+	reCreateImageStyle();
+	
+	/*
+    if(!field_info_field('image_crop_field')) // check if the field already exists.
+    {
+        $field = array(
+            'field_name'    => 'image_crop',
+            'type'          => 'image_crop'
+        );
+        field_create_field($field);
+    }
+	*/
+    field_info_cache_clear();
+}
+
+function image_crop_disable ()
+{
+	deleteImageStyle();
+	
+	/*
+    if(!field_info_field($name_field)) // check if the field already exists.
+    {
+        $instances = field_info_instances('node', 'image_crop');
+        foreach ($instances as $instance_name => $instance) {
+            field_delete_instance($instance);
+        }
+        
+        drupal_set_message("Field removed successfully!");
+        
+    }
+	*/
+    field_info_cache_clear();
+}

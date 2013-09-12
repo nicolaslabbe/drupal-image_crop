@@ -1,0 +1,11 @@
+name = Image crop field
+package = IMAGE
+description = generate new image style to use crop position for each style
+project = "image_crop"
+core = "7.x"
+version = "7.x-1"
+
+files[] = image_crop.module
+files[] = image_crop.install
+
+configure = admin/config/media/image-crop

@@ -1,0 +1,30 @@
+.imagePositionWidget .form-item {
+    width: 100px;
+    display: inline-block;
+    text-align: center;
+    position: relative;
+}
+
+.imagePositionWidget .form-item .option {
+    display: block;
+	padding-top: 18px;
+	opacity: .5;
+	cursor: pointer;
+}
+
+.imagePositionWidget .form-item.active .option {
+	opacity: 1;
+}
+
+.imagePositionWidget .form-item .option:hover {
+	opacity: 1;
+}
+
+.imagePositionWidget .form-item input[type="radio"] {
+	display: block;
+	margin-left: -6px;
+	margin-bottom: 10px;
+	position: absolute;
+	left: 50%;
+	display: none;
+}

@@ -1,0 +1,240 @@
+<?php
+// $Id$
+
+require_once 'function_image_crop.php';
+
+/**
+ * Implements hook_menu().
+ */
+function image_crop_menu()
+{
+  $items = array();
+  
+  // Need at least one child item before your section will appear.
+  $items['admin/config/media/image-crop'] = array(
+    'title' => 'Image crop',
+    'description' => 'Reset, regenerate, edit ratio of module image crop',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('image_crop_settings_form'),
+    'access arguments' => array('administer site configuration'),
+  );
+  
+  return $items;
+}
+
+/**
+ * Helper function generates admin settings page.
+ */
+function image_crop_settings_form ()
+{
+	if(isset($_POST["image_crop_ratio"])) {
+		if($_POST["image_crop_ratio"] != null) {
+			variable_set('image_crop_ratio', $_POST["image_crop_ratio"] * 1);
+		}
+		
+		deleteImageStyle();
+		reCreateImageStyle();
+	}
+	
+	$image_crop_ratio = variable_get('image_crop_ratio') == '' ? 1.5 : variable_get('image_crop_ratio');
+  
+	$form['image_crop_ratio'] = array(
+		'#type' => 'textfield',
+    	'#title' => t('Image crop ratio'),
+    	'#value' => $image_crop_ratio,
+    	'#description' => t('For example if the image style size is 100x100 pixels. A ratio of 1.5 will 50px of 150x150 pixels.'),
+  	);
+
+	return system_settings_form($form);
+}
+
+/**
+ * @file
+ * Defines a simple color picker field type.
+ */
+function image_crop_init ()
+{
+    if (arg(1) == 'add' || arg(2) == 'edit') {
+        drupal_add_css(drupal_get_path('module', 'image_crop') . '/css/image_crop.css');
+        drupal_add_js(drupal_get_path('module', 'image_crop') . '/js/image_crop.js');
+    }
+}
+
+/***************************************************************
+ * Field Type API hooks
+ ***************************************************************/
+/**
+ * Implement hook_field_info().
+ */
+function image_crop_field_info ()
+{
+    return array(
+        'image_crop' => array(
+            'label' => t('Image crop'),
+            'description' => t('Select image best cropping'),
+            'default_widget' => 'image_crop_widget',
+            'default_formatter' => 'image_crop_formatter',
+        ),
+    );
+}
+
+/**
+ * Implement hook_field_widget_info().
+ */
+function image_crop_field_widget_info ()
+{
+    return array(
+        'image_crop_widget' => array(
+            'label' => t('Default'),
+            'field types' => array('image_crop'),
+        ),
+    );
+}
+
+/**
+ * Implement hook_field_widget_form().
+ */
+function image_crop_field_widget_form (&$form, &$form_state, $field, $instance, $langcode, $items, $delta = 0)
+{
+    if (isset($items[$delta]['image_crop'])) {
+        $match = $items[$delta]['image_crop'];
+    }else {
+        $match = '';
+    }
+    
+    $element['image_crop'] = array(
+        '#type' => 'radios',
+        '#name' => 'image_crop',
+        '#title' => 'Select image best cropping',
+        '#default_value' => $match,
+        '#attributes' => array(
+            'class' => array('imagePositionWidget'),
+        ),
+        '#options' => array(
+            '' => '<img src="' . url() . drupal_get_path('module', 'image_crop') . '/img/preview_full_full.jpg" />',
+            '_center_top' => '<img src="' . url() . drupal_get_path('module', 'image_crop') . '/img/preview_center_top.jpg" />',
+            '_center_center' => '<img src="' . url() . drupal_get_path('module', 'image_crop') . '/img/preview_center_center.jpg" />',
+            '_center_bottom' => '<img src="' . url() . drupal_get_path('module', 'image_crop') . '/img/preview_center_bottom.jpg" />',
+            '_left_center' => '<img src="' . url() . drupal_get_path('module', 'image_crop') . '/img/preview_left_center.jpg" />',
+            '_right_center' => '<img src="' . url() . drupal_get_path('module', 'image_crop') . '/img/preview_right_center.jpg" />',
+        ),
+    );
+    
+    return $element;
+}
+
+/**
+ * Implement hook_field_is_empty().
+ */
+function image_crop_field_is_empty ($item, $field)
+{
+    return false;
+}
+
+/**
+ * Implement hook_field_validate().
+ */
+function image_crop_field_validate ($obj_type, $object, $field, $instance, $langcode, &$items, &$errors)
+{
+    return;
+}
+
+/**
+ * Implement hook_field_widget_error().
+ */
+function image_crop_field_widget_error ($element, $error)
+{
+    return;
+}
+
+/**
+ * Implement hook_field_formatter_info().
+ */
+function image_crop_field_formatter_info ()
+{
+    return array(
+        'image_crop_formatter' => array(
+            'label' => t('"Image crop"'),
+            'field types' => array('image_crop'),
+        ),
+    );
+}
+ 
+/**
+ * Implements hook_field_formatter_view().
+ */
+function image_crop_field_formatter_view ($object_type, $object, $field, $instance, $langcode, $items, $display)
+{
+    $element = array();
+    
+    if($display['type'] == 'image_crop_formatter') {
+        foreach ($items as $delta => $item) {
+            $element[$delta] = $items[0]['image_crop'];
+        }
+    }
+    return $element;
+}
+
+/**
+ * Implement hook_field_schema().
+ */
+function image_crop_field_schema ($field)
+{      
+    $columns = array(
+        'image_crop' => array(
+            'type' => 'varchar',
+            'length' => 255,
+            'not null' => TRUE
+        ),
+    );
+    return array('columns' => $columns);
+}
+
+/**
+ * Convert form elements r, g, and b into a single rgb HTML spec. We
+ * should also perform pushwidget-level validation here to get per-color
+ * error reporting, but field-level validation is good enough for now.
+ */
+function image_crop_validate ($element, &$form_state)
+{
+    return;
+}
+
+/**
+ * 
+ */
+function get_image_cropped ($node, $style)
+{
+	$l = $node->language;
+	$array_file_type = array('image/png', 'image/jpeg', 'image/jpg', 'image/gif');
+	$url = '';
+	
+	foreach ($node as $key => $value) {
+		if(is_array($value) && isset($value[$l])) {
+			foreach ($value[$l] as $keyL => $valueL) {
+				
+				// field image found
+				if(isset($valueL["filemime"])
+					&& $valueL["filemime"] != ''
+						&& in_array($valueL["filemime"], $array_file_type)
+							&& $valueL["uri"]) {
+					
+					$url = $valueL["uri"];
+				}
+				
+				// field image crop found
+				if(isset($valueL["image_crop"])
+					&& $valueL["image_crop"] != '') {
+					
+					$style .= $valueL["image_crop"];
+				}
+			}
+		}
+	}
+	
+	if($url == '') {
+		return false;
+	}else {
+        return image_style_url($style, $url);
+	}
+}
