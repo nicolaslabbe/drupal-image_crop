@@ -53,3 +53,15 @@ Regenerate image style after add a new one :
 /admin/config/media/image-crop
 
 Click "Save configuration", previous generated style will be removed and recreated
+
+Dev
+=================
+Now instead of calling :
+```
+image_style_url([ STYLE NAME ], [ URI ]);
+```
+
+Use :
+```
+get_image_cropped($node, [ STYLE NAME ]);
+```
