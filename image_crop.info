@@ -1,4 +1,4 @@
-name = Image crop field
+name = Image crop
 package = IMAGE
 description = generate new image style to use crop position for each style
 project = "image_crop"
